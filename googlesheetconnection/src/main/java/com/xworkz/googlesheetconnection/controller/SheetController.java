@@ -17,15 +17,12 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.servlet.config.annotation.EnableWebMvc;
-
 import com.xworkz.googlesheetconnection.dto.TraineeDTO;
 import com.xworkz.googlesheetconnection.service.SheetService;
 
 @RestController
 @RequestMapping("/trainee")
 @CrossOrigin(origins = "http://localhost:3000")
-@EnableWebMvc
 public class SheetController {
 	@Autowired
 	SheetService sheetService;
@@ -63,9 +60,9 @@ public class SheetController {
 	}
 
 	@GetMapping("/contact/{mobileNumber}")
-	public TraineeDTO findByMobileNumber(@RequestHeader String sheetId, @PathVariable String mobileNumber)
+	public List<TraineeDTO> findByMobileNumber(@RequestHeader String sheetId, @PathVariable String mobileNumber)
 			throws IOException {
-		return this.sheetService.findByMobileNumber(sheetId, mobileNumber);
+		return this.sheetService.findByMobile(sheetId, mobileNumber);
 	}
 
 	@GetMapping()

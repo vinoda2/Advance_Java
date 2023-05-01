@@ -8,9 +8,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.mortbay.log.Log;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -22,7 +21,6 @@ import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.services.sheets.v4.Sheets;
 import com.google.api.services.sheets.v4.SheetsScopes;
 import com.google.api.services.sheets.v4.model.ValueRange;
-import com.xworkz.googlesheetconnection.configuration.SwaggerConfiguration;
 import com.xworkz.googlesheetconnection.dto.TraineeDTO;
 import com.xworkz.googlesheetconnection.util.GoogleSheetUtil;
 
@@ -189,7 +187,7 @@ public class SheetService {
 			for (List<Object> list : valueList) {
 				String disableStatus = (String) list.get(4);
 				Boolean activeStatus = Boolean.valueOf(disableStatus);
-				if (list.get(2).toString().contains(mobileNumber)&& activeStatus.equals(false)) {
+				if (list.get(2).toString().equals(mobileNumber)&& activeStatus.equals(false)) {
 					getDTO(list, dto);
 				} 
 			}
@@ -197,6 +195,25 @@ public class SheetService {
 		return dto;
 	}
 
+	// Find by Mobile number it return DTO matching with Mobile number
+	public List<TraineeDTO> findByMobile(String sheetId, String searchText) throws IOException {
+		List<List<Object>> list = readValues(sheetId);
+		List<TraineeDTO> traineeList = new ArrayList<TraineeDTO>();	
+		if(list!=null && list.size()!=0) {
+			for(List<Object> value:list) {
+				String name=(String)value.get(0);
+				String email=(String)value.get(1);
+				String number=(String) value.get(2);
+				String address=(String)value.get(3);
+				if(number.contains(searchText)||name.contains(searchText)||email.contains(searchText)||address.contains(searchText)) {
+					TraineeDTO dto = new TraineeDTO();
+					getDTO(value, dto);
+					traineeList.add(dto);
+				}
+			}
+		}
+		return traineeList;
+	}
 	// updateDisableByEmail
 	public String updateDisableByEmail(String sheetId, String email) throws IOException {
 		List<List<Object>> valueList = readValues(sheetId);
