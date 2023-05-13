@@ -24,16 +24,19 @@ import com.google.api.services.sheets.v4.model.ValueRange;
 import com.xworkz.googlesheetconnection.dto.TraineeDTO;
 import com.xworkz.googlesheetconnection.util.GoogleSheetUtil;
 
+import lombok.extern.slf4j.Slf4j;
 
 @Service
+@Slf4j
 public class SheetService {
 	@Autowired
 	JavaMailSender mailSender;
-	
+
 	private static final String APPLICATION_NAME = "Google sheet new ";
 	private static final JsonFactory JSON_FACTORY = JacksonFactory.getDefaultInstance();
 	private static final List<String> SCOPES = Collections.singletonList(SheetsScopes.SPREADSHEETS);
-	//private static final String CREDENTIALS_FILE_PATH = "src/main/resources/credentials.json";
+	// private static final String CREDENTIALS_FILE_PATH =
+	// "src/main/resources/credentials.json";
 //	private static final String CREDENTIALS_FILE_PATH = "classpath:credentials.json";
 //	File file = new ClassPathResource("classpath:credentials.json").getFile().getAbsolutePath();
 	private static Sheets sheet;
@@ -42,7 +45,9 @@ public class SheetService {
 
 	// loading the connection
 	public SheetService() throws IOException, GeneralSecurityException {
-		credential = GoogleCredential.fromStream(new FileInputStream(new ClassPathResource("credentials.json").getFile().getAbsolutePath())).createScoped(SCOPES);
+		credential = GoogleCredential
+				.fromStream(new FileInputStream(new ClassPathResource("credentials.json").getFile().getAbsolutePath()))
+				.createScoped(SCOPES);
 		sheet = new Sheets.Builder(new NetHttpTransport(), JSON_FACTORY, credential)
 				.setApplicationName(APPLICATION_NAME).build();
 	}
@@ -51,7 +56,7 @@ public class SheetService {
 	public String writeData(String SheetId, TraineeDTO dto) {
 		List<List<Object>> objectlist = new ArrayList<>();
 		List<Object> list = new ArrayList<>();
-		boolean sendMessage=this.sendMail(dto.getEmail(), "X-workz","Thanks for registering");
+		// this.sendMail(dto.getEmail(), "X-workz","Thanks for registering");
 		list.add(dto.getStudentName());
 		list.add(dto.getEmail());
 		list.add(dto.getContactNumber());
@@ -60,14 +65,14 @@ public class SheetService {
 		objectlist.add(list);
 		ValueRange body = new ValueRange().setValues(objectlist);
 		try {
-			sheet.spreadsheets().values().append(SheetId, range, body)
-					.setValueInputOption("Raw").execute();
+			sheet.spreadsheets().values().append(SheetId, range, body).setValueInputOption("Raw").execute();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 		return "Data saved Successfully";
 
 	}
+
 //	@Cacheable(value="traineeemail", key="email")
 	// read single value from Google Sheet
 	public List<TraineeDTO> getValues(String sheetId) throws IOException {
@@ -84,17 +89,17 @@ public class SheetService {
 			}
 
 			return sdto;
-		} 
+		}
 		return null;
 	}
-	
+
 	public List<String> getLocation(String sheetId) throws IOException {
-		sheetId="1Np5h34vhqj4W2UithqIbNucnJ97url9IcUwyx2OmG50";
+		sheetId = "1Np5h34vhqj4W2UithqIbNucnJ97url9IcUwyx2OmG50";
 		List<List<Object>> list = readValues(sheetId);
-		List<String> locationList=new ArrayList<String>();
-		if(list!=null&&list.size()!=0) {
-			for(List<Object> value:list) {
-				String location =(String) value.get(1);
+		List<String> locationList = new ArrayList<String>();
+		if (list != null && list.size() != 0) {
+			for (List<Object> value : list) {
+				String location = (String) value.get(1);
 				locationList.add(location);
 			}
 		}
@@ -117,8 +122,7 @@ public class SheetService {
 				List<List<Object>> lists = new ArrayList<List<Object>>();
 				lists.add(updateList);
 				ValueRange body = new ValueRange().setValues(lists);
-				sheet.spreadsheets().values().update(sheetId, updateRange, body)
-						.setValueInputOption("Raw").execute();
+				sheet.spreadsheets().values().update(sheetId, updateRange, body).setValueInputOption("Raw").execute();
 				return "update Successfully done";
 			}
 			updateIndex++;
@@ -129,16 +133,16 @@ public class SheetService {
 	// find by Name return list<Object>
 	public TraineeDTO findByName(String sheetId, String name) throws IOException {
 		List<List<Object>> valueList = readValues(sheetId);
-		//TraineeDTO nameList = new TraineeDTO();
+		// TraineeDTO nameList = new TraineeDTO();
 		if (valueList != null && valueList.size() != 0) {
 			for (List<Object> list : valueList) {
 				String disableStatus = (String) list.get(4);
 				Boolean activeStatus = Boolean.valueOf(disableStatus);
-				if (list.get(0).equals(name)&&activeStatus.equals(false)) {
+				if (list.get(0).equals(name) && activeStatus.equals(false)) {
 					TraineeDTO dto = new TraineeDTO();
 					getDTO(list, dto);
 					return dto;
-	
+
 				}
 			}
 
@@ -170,13 +174,40 @@ public class SheetService {
 			for (List<Object> list : valueList) {
 				String disableStatus = (String) list.get(4);
 				Boolean activeStatus = Boolean.valueOf(disableStatus);
-				if (list.get(1).equals(email)&&activeStatus.equals(false)) {
+				if (list.get(1).equals(email) && activeStatus.equals(false)) {
 					getDTO(list, dto);
 					return dto;
 				}
 			}
 		}
 		return null;
+	}
+
+	// Find By Email it returns DTO matching with Email
+	public String findEmail(String sheetId, String email) throws IOException {
+		List<List<Object>> valueList = readValues(sheetId);
+		System.out.println(valueList);
+		for (List<Object> list : valueList) {
+			System.out.println(list);
+			String findEmail = (String) list.get(1);
+			System.out.println(findEmail);
+			if (findEmail != null && !findEmail.equals(email)) {
+				System.out.println(email);
+				return "email is valid";
+			} else {
+				return "email already exists";
+			}
+		}
+		return null;
+	}
+
+	// Find By Email it returns DTO matching with Email
+	public String findNumber(String sheetId, String contactNumber) throws IOException {
+		List<List<Object>> valueList = readValues(sheetId);
+		for(List<Object> list:valueList) {
+			String number=(String) list.get(2);
+		}
+		return "valid";
 	}
 
 	// Find by Mobile number it return DTO matching with Mobile number
@@ -187,9 +218,9 @@ public class SheetService {
 			for (List<Object> list : valueList) {
 				String disableStatus = (String) list.get(4);
 				Boolean activeStatus = Boolean.valueOf(disableStatus);
-				if (list.get(2).toString().equals(mobileNumber)&& activeStatus.equals(false)) {
+				if (list.get(2).toString().equals(mobileNumber) && activeStatus.equals(false)) {
 					getDTO(list, dto);
-				} 
+				}
 			}
 		}
 		return dto;
@@ -198,14 +229,15 @@ public class SheetService {
 	// Find by Mobile number it return DTO matching with Mobile number
 	public List<TraineeDTO> findByMobile(String sheetId, String searchText) throws IOException {
 		List<List<Object>> list = readValues(sheetId);
-		List<TraineeDTO> traineeList = new ArrayList<TraineeDTO>();	
-		if(list!=null && list.size()!=0) {
-			for(List<Object> value:list) {
-				String name=(String)value.get(0);
-				String email=(String)value.get(1);
-				String number=(String) value.get(2);
-				String address=(String)value.get(3);
-				if(number.contains(searchText)||name.contains(searchText)||email.contains(searchText)||address.contains(searchText)) {
+		List<TraineeDTO> traineeList = new ArrayList<TraineeDTO>();
+		if (list != null && list.size() != 0) {
+			for (List<Object> value : list) {
+				String name = (String) value.get(0);
+				String email = (String) value.get(1);
+				String number = (String) value.get(2);
+				String address = (String) value.get(3);
+				if (number.contains(searchText) || name.contains(searchText) || email.contains(searchText)
+						|| address.contains(searchText)) {
 					TraineeDTO dto = new TraineeDTO();
 					getDTO(value, dto);
 					traineeList.add(dto);
@@ -214,6 +246,7 @@ public class SheetService {
 		}
 		return traineeList;
 	}
+
 	// updateDisableByEmail
 	public String updateDisableByEmail(String sheetId, String email) throws IOException {
 		List<List<Object>> valueList = readValues(sheetId);
@@ -230,8 +263,8 @@ public class SheetService {
 						List<List<Object>> updateList = new ArrayList<>();
 						updateList.add(objlist);
 						ValueRange body = new ValueRange().setValues(updateList);
-						sheet.spreadsheets().values()
-								.update(sheetId, updateRange, body).setValueInputOption("Raw").execute();
+						sheet.spreadsheets().values().update(sheetId, updateRange, body).setValueInputOption("Raw")
+								.execute();
 					} else {
 						return "Account Already disabled";
 					}
@@ -260,7 +293,6 @@ public class SheetService {
 		return activeStudent;
 	}
 
-	
 	private void getDTO(List<Object> list, TraineeDTO dto) {
 		dto.setStudentName((String) list.get(0));
 		dto.setEmail((String) list.get(1));
@@ -273,9 +305,10 @@ public class SheetService {
 		List<List<Object>> valueList = result.getValues();
 		return valueList;
 	}
+
 	public boolean sendMail(String email, String subject, String body) {
-		//SimpleMailMessage message = new SimpleMailMessage();
-		SimpleMailMessage helper=new SimpleMailMessage();
+		// SimpleMailMessage message = new SimpleMailMessage();
+		SimpleMailMessage helper = new SimpleMailMessage();
 		helper.setFrom("vinodamallappa@outlook.com");
 		helper.setReplyTo("vinodamallappa@outlook.com");
 		helper.setTo(email);
@@ -283,6 +316,78 @@ public class SheetService {
 		helper.setText(body);
 		System.out.println(helper);
 		mailSender.send(helper);
+
 		return true;
 	}
+	
+	public String dataPagination(int startingPoint, int maxRows) {
+        String ranges = "A1:E1";
+        String[] rangePart = ranges.split(":");
+        String startColumn = rangePart[0].replaceAll("[0-9]+", "");
+        String endColumn = rangePart[1].replaceAll("[0-9]+", "");
+        log.info("startColumn " + startColumn);
+        log.info("endColumn " + endColumn);
+        int startRow = 0;
+        int endRow = 0;
+        String startRows = rangePart[0].replaceAll("[^0-9]+", "");
+        String endRows = rangePart[1].replaceAll("[^0-9]+", "");
+        log.info("startRows " + startRows);
+        log.info("endRows " + endRows);
+        log.info("startingPoint " + startingPoint);
+        log.info("maxRows " + maxRows);
+        if (!startRows.isEmpty()) {
+            startRow = Integer.parseInt(startRows) + startingPoint;
+            log.info("startRow1 " + startRow);
+        }
+        if (!endRows.isEmpty()) {
+            endRow = Integer.parseInt(endRows) + startingPoint + maxRows - 1;
+            log.info("endRow1 " + endRow);
+        }
+        log.info(startColumn + startRow + ":" + endColumn + endRow);
+        return startColumn + startRow + ":" + endColumn + endRow;
+   }
+
+
+
+
+   public List<TraineeDTO> dataPagination(String spreadsheetId, int startIndex, int maxResult)
+            throws NumberFormatException {
+        log.info("dataPagination is runnig");
+        ValueRange result = null;
+        List<TraineeDTO> data = new ArrayList();
+        try {
+            String pagination = dataPagination(startIndex, maxResult);
+           result = sheet.spreadsheets().values().get(spreadsheetId, pagination).execute();
+//            totalRecord=result.size();
+//            System.out.println(totalRecord);
+            log.info("result " + result);
+            List<List<Object>> values = result.getValues();
+            log.info("values " + values);
+           log.info("data " + data);
+           for (List<Object> list : values) {
+                String statuss = (String) list.get(4);
+//                System.out.println("total row"+data);
+                Boolean active = Boolean.valueOf(statuss);
+                if (!active.equals(true)) {
+                	TraineeDTO dto = new TraineeDTO();
+                    Object name = list.get(0);
+                    Object email = list.get(1);
+                    Object mobileNo = list.get(2);
+                    Object location = list.get(3);
+                    String status = (String) list.get(4);
+                    Boolean activeStatus = Boolean.valueOf(status);
+                    dto.setStudentName((String) name);
+                    dto.setContactNumber((String) mobileNo);
+                    dto.setEmail((String) email);
+                    dto.setAddress((String) location);
+                    dto.setDisabled(activeStatus);
+                    data.add(dto);
+                    log.info("dto " + dto);
+                }
+            }
+       } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return data;
+   }
 }
