@@ -77,6 +77,7 @@ public class SheetService {
 	// read single value from Google Sheet
 	public List<TraineeDTO> getValues(String sheetId) throws IOException {
 		List<List<Object>> list = readValues(sheetId);
+		log.info("size of the Data:"+list.size());
 		List<TraineeDTO> sdto = new ArrayList<TraineeDTO>();
 		if (list != null && list.size() != 0) {
 			for (List<Object> value : list) {
@@ -205,9 +206,15 @@ public class SheetService {
 	public String findNumber(String sheetId, String contactNumber) throws IOException {
 		List<List<Object>> valueList = readValues(sheetId);
 		for(List<Object> list:valueList) {
-			String number=(String) list.get(2);
+			String number=(String)list.get(2);		
+			if(number.equals(contactNumber)) {
+				return "Number Exists";
+			}else {
+				return "Number Not Exists";
+			}
+			
 		}
-		return "valid";
+		return null;
 	}
 
 	// Find by Mobile number it return DTO matching with Mobile number

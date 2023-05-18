@@ -11,21 +11,21 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 
 import org.mortbay.log.Log;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
-import org.springframework.util.comparator.BooleanComparator;
-
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
+import com.google.api.client.util.DateTime;
 import com.google.api.services.sheets.v4.Sheets;
-import com.google.api.services.sheets.v4.Sheets.Spreadsheets.GetByDataFilter;
-import com.google.api.services.sheets.v4.Sheets.Spreadsheets.Values.BatchGetByDataFilter;
 import com.google.api.services.sheets.v4.SheetsScopes;
+import com.google.api.services.sheets.v4.model.AddFilterViewRequest;
 import com.google.api.services.sheets.v4.model.BasicFilter;
 import com.google.api.services.sheets.v4.model.BatchGetValuesByDataFilterRequest;
 import com.google.api.services.sheets.v4.model.BatchGetValuesByDataFilterResponse;
@@ -35,7 +35,6 @@ import com.google.api.services.sheets.v4.model.BooleanCondition;
 import com.google.api.services.sheets.v4.model.CellData;
 import com.google.api.services.sheets.v4.model.ConditionValue;
 import com.google.api.services.sheets.v4.model.DataFilter;
-import com.google.api.services.sheets.v4.model.DataFilterValueRange;
 import com.google.api.services.sheets.v4.model.FilterCriteria;
 import com.google.api.services.sheets.v4.model.FilterView;
 import com.google.api.services.sheets.v4.model.GetSpreadsheetByDataFilterRequest;
@@ -44,12 +43,10 @@ import com.google.api.services.sheets.v4.model.GridRange;
 import com.google.api.services.sheets.v4.model.MatchedValueRange;
 import com.google.api.services.sheets.v4.model.Request;
 import com.google.api.services.sheets.v4.model.RowData;
-import com.google.api.services.sheets.v4.model.SetBasicFilterRequest;
 import com.google.api.services.sheets.v4.model.Sheet;
+import com.google.api.services.sheets.v4.model.SortSpec;
 import com.google.api.services.sheets.v4.model.Spreadsheet;
-import com.google.api.services.sheets.v4.model.TextFormat;
-import com.google.api.services.sheets.v4.model.ValueRange;
-import com.xworkz.googlesheetconnection.dto.TraineeDTO;
+
 
 @Service
 public class SheetServiceFilter {
@@ -145,40 +142,12 @@ public class SheetServiceFilter {
 	}
 
 	public String filter(String searchText) throws IOException {
-		Object name = "a";
-		BooleanCondition condition = new BooleanCondition();
-		System.out.println(condition);
-		
-		condition.set(searchText, "a");
-		System.out.println(condition);
-		
-		condition.setType("TEXT_CONTAINS");
-		System.out.println(condition);
-		
-		condition.setFactory(JSON_FACTORY);
-		System.out.println(condition);
-		
-		
-		FilterCriteria filter = new FilterCriteria()
-				.setCondition(condition.setValues(Arrays.asList(new ConditionValue()
-						.setUserEnteredValue(searchText))));
-		System.out.println(filter);
 
-		filter.set(searchText, name);
-		System.out.println(filter);
-
-		filter.setCondition(condition);
-		System.out.println(filter);
-	
-		Map<String, FilterCriteria> mapFilter = new LinkedHashMap<>();
-		mapFilter.put("A", filter);
-		System.out.println(mapFilter);
-		
-		//Log.info("setting map Filter");
-		BasicFilter basicFilter = new BasicFilter().setRange(new GridRange().setSheetId(0).setStartRowIndex(0)
-				.setEndRowIndex(100).setStartColumnIndex(0).setEndColumnIndex(5)).setCriteria(mapFilter);
-		System.out.println(basicFilter);
-	
+		/*
+		 * BooleanCondition condition = new BooleanCondition();
+		 * condition.setType("TEXT_CONTAINS"); condition.setFactory(JSON_FACTORY);
+		 */
+/*
 		DataFilter dataFilter = new DataFilter().setGridRange(new GridRange().setSheetId(0).setStartRowIndex(1)
 				.setEndRowIndex(100).setStartColumnIndex(0).setEndColumnIndex(4));
 		System.out.println(dataFilter);
@@ -188,12 +157,71 @@ public class SheetServiceFilter {
 		
 		GetSpreadsheetByDataFilterRequest request = new GetSpreadsheetByDataFilterRequest().setDataFilters(fill);
 		System.out.println(request.isEmpty());
-		System.out.println(request.setDataFilters(fill));
+		request.setIncludeGridData(true);
+		AddFilterViewRequest addFilterViewRequest=new  AddFilterViewRequest();
 		
-		Collection<Object> response=sheet.spreadsheets().getByDataFilter(spreadsheetId,request).values();
+		Map<String, String> filter=new HashMap<String, String>();
 		
-		System.out.println(response);
-		System.out.println(response.toString());
+		filter.put("title", "Sample Filter");
+		filter.put("range", "A1");
+		
+		Map<String, Object> filterView=new HashMap<String, Object>();
+		filterView.put("addFilterView", filter);
+		
+		Spreadsheet responses=sheet.spreadsheets().getByDataFilter(spreadsheetId,request).execute();
+		System.out.println(responses);
+		
+	
+		GridRange myRange = new GridRange()
+		            .setSheetId(0)
+		            .setStartRowIndex(0)
+		            .setStartColumnIndex(0)
+		            .setEndRowIndex(100);
+		System.out.println(myRange);
+		
+		BasicFilter filter = new BasicFilter()
+	            .setRange(myRange)
+	            .setSortSpecs(Collections.singletonList(
+	                new SortSpec()
+	                    .setDimensionIndex(3)
+	                    .setSortOrder("DESCENDING")));
+	        
+		System.out.println(filter);
+	    
+		filter.put("title", "Sample Filter");
+		filter.put("range", "A1");
+		
+		Map<String, Object> filterView=new HashMap<String, Object>();
+		filterView.put("addFilterView", filter);
+		
+		AddFilterViewRequest addFilterViewRequest = new AddFilterViewRequest()
+				.set("email","vinoda@gmail.com")
+				.setFilter((FilterView) filterView);
+	        System.out.println(addFilterViewRequest);
+	        
+	        
+		/*
+		
+		        BasicFilter filter = new BasicFilter()
+		            .setRange(myRange)
+		            .setSortSpecs(Collections.singletonList(
+		                new SortSpec()
+		                    .setDimensionIndex(3)
+		                    .setSortOrder("DESCENDING")));
+		        
+		        System.out.println(filter);
+		        
+		        AddFilterViewRequest addFilterViewRequest = new AddFilterViewRequest();
+		        BatchUpdateSpreadsheetResponse  response= sheet.spreadsheets().batchUpdate(spreadsheetId, new BatchUpdateSpreadsheetRequest()
+		            .setRequests(Collections.singletonList(
+		                new Request()
+		                    .setAddFilterView(addFilterViewRequest))))
+		            .execute();
+		        System.out.println(addFilterViewRequest);
+		        System.out.println(response);
+		*/
 		return searchText;
 	}
+	
+	
 }

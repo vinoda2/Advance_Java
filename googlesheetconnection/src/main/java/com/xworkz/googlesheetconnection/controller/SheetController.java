@@ -22,7 +22,6 @@ import com.xworkz.googlesheetconnection.service.SheetService;
 
 @RestController
 @RequestMapping("/trainee")
-@CrossOrigin(origins = "http://localhost:3000")
 public class SheetController {
 	@Autowired
 	SheetService sheetService;

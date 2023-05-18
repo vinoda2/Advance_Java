@@ -22,9 +22,7 @@ import com.xworkz.googlesheetconnection.service.SheetServiceFilter;
 
 @RestController
 @RequestMapping("/trainees")
-@CrossOrigin(origins = "http://localhost:3000")
 public class AutoSuggestionController {
-	
 	@Autowired
 	SheetService sheetService;
 	@Autowired

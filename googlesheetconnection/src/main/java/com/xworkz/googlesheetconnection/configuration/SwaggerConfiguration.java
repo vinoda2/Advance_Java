@@ -1,8 +1,7 @@
 package com.xworkz.googlesheetconnection.configuration;
-import org.springframework.beans.factory.annotation.Value;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
 import springfox.documentation.builders.ApiInfoBuilder;
 import springfox.documentation.builders.PathSelectors;
 import springfox.documentation.builders.RequestHandlerSelectors;
@@ -14,22 +13,15 @@ import springfox.documentation.swagger2.annotations.EnableSwagger2;
 @Configuration
 @EnableSwagger2
 public class SwaggerConfiguration {
-	
+
 	@Bean
 	public Docket api() {
-		return new Docket(DocumentationType.SWAGGER_2)
-				.apiInfo(apiInfo())
-				.select()
+		return new Docket(DocumentationType.SWAGGER_2).apiInfo(apiInfo()).select()
 				.apis(RequestHandlerSelectors.basePackage("com.xworkz.googlesheetconnection"))
-				.paths(PathSelectors.any())
-				.build();
+				.paths(PathSelectors.any()).build();
 	}
 
 	private ApiInfo apiInfo() {
-		return new ApiInfoBuilder()
-				.title("Xworkz App")
-				.description("Google sheets Crud")
-				.version("1.0")
-				.build();
+		return new ApiInfoBuilder().title("Xworkz App").description("Google sheets Crud").version("1.0").build();
 	}
 }
